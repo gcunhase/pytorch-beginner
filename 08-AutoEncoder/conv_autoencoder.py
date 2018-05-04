@@ -9,6 +9,13 @@ from torchvision import transforms
 from torchvision.utils import save_image
 from torchvision.datasets import MNIST
 import os
+import numpy as np
+
+
+"""
+    Modified by Gwena on May 4th 2018 to recover the hidden state after the encoder
+    Used for feature extraction
+"""
 
 if not os.path.exists('./dc_img'):
     os.mkdir('./dc_img')
@@ -21,8 +28,9 @@ def to_img(x):
     return x
 
 
-num_epochs = 100
-batch_size = 128
+num_epochs = 2
+saving_step = 10
+batch_size = 64  # 128
 learning_rate = 1e-3
 
 img_transform = transforms.Compose([
@@ -45,6 +53,7 @@ class autoencoder(nn.Module):
             nn.ReLU(True),
             nn.MaxPool2d(2, stride=1)  # b, 8, 2, 2
         )
+
         self.decoder = nn.Sequential(
             nn.ConvTranspose2d(8, 16, 3, stride=2),  # b, 16, 5, 5
             nn.ReLU(True),
@@ -55,9 +64,9 @@ class autoencoder(nn.Module):
         )
 
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.decoder(x)
-        return x
+        h1 = self.encoder(x)
+        h2 = self.decoder(h1)
+        return h2, h1
 
 
 model = autoencoder().cuda()
@@ -70,17 +79,39 @@ for epoch in range(num_epochs):
         img, _ = data
         img = Variable(img).cuda()
         # ===================forward=====================
-        output = model(img)
+        output, hidden = model(img)
         loss = criterion(output, img)
+        loss2 = criterion(model.decoder(hidden), img)
         # ===================backward====================
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
     # ===================log========================
-    print('epoch [{}/{}], loss:{:.4f}'
-          .format(epoch+1, num_epochs, loss.data[0]))
-    if epoch % 10 == 0:
+    print('epoch [{}/{}], loss:{:.4f}, loss2:{:.4f}'.format(epoch+1, num_epochs, loss.data[0], loss2.data[0]))
+
+    if epoch % saving_step == 0:
         pic = to_img(output.cpu().data)
         save_image(pic, './dc_img/image_{}.png'.format(epoch))
+        out_restored = model.decoder(hidden)
+        pic_restored = to_img(out_restored.cpu().data)
+        save_image(pic_restored, './dc_img/image_{}_restored.png'.format(epoch))
 
 torch.save(model.state_dict(), './conv_autoencoder.pth')
+# Get weights
+print("Model keys: {}".format(model.state_dict().keys()))
+# W = model.state_dict()['fc1.weight']
+
+
+# Test with loaded model and last train img
+model = autoencoder().cuda()
+model.load_state_dict(torch.load('./conv_autoencoder.pth'))
+
+pic = to_img(img.cpu().data)
+save_image(pic, './dc_img/img_in.png')
+output, hidden = model(img)
+pic_out = to_img(output.cpu().data)
+save_image(pic_out, './dc_img/img_out.png')
+out_restored = model.decoder(hidden)
+pic_restored = to_img(out_restored.cpu().data)
+save_image(pic_restored, './dc_img/img_restored.png')
+
