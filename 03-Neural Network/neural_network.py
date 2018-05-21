@@ -12,7 +12,7 @@ batch_size = 32
 learning_rate = 1e-2
 num_epoches = 50
 
-# 下载训练集 MNIST 手写数字训练集
+# Download MNIST
 train_dataset = datasets.MNIST(
     root='./data', train=True, transform=transforms.ToTensor(), download=True)
 
@@ -23,7 +23,7 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 
-# 定义简单的前馈神经网络
+# Defining a simple feed forward neural network
 class Neuralnetwork(nn.Module):
     def __init__(self, in_dim, n_hidden_1, n_hidden_2, out_dim):
         super(Neuralnetwork, self).__init__()
@@ -59,14 +59,14 @@ for epoch in range(num_epoches):
         else:
             img = Variable(img)
             label = Variable(label)
-        # 向前传播
+        # Forward
         out = model(img)
         loss = criterion(out, label)
         running_loss += loss.data[0] * label.size(0)
         _, pred = torch.max(out, 1)
         num_correct = (pred == label).sum()
         running_acc += num_correct.data[0]
-        # 向后传播
+        # Backward
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -100,5 +100,5 @@ for epoch in range(num_epoches):
         test_dataset)), eval_acc / (len(test_dataset))))
     print()
 
-# 保存模型
+# Save model
 torch.save(model.state_dict(), './neural_network.pth')

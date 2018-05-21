@@ -9,7 +9,7 @@ from torchvision import transforms
 from torchvision import datasets
 from logger import Logger
 
-# 定义超参数
+# Defininf hyperparameters
 batch_size = 128
 learning_rate = 1e-2
 num_epoches = 20
@@ -18,8 +18,7 @@ num_epoches = 20
 def to_np(x):
     return x.cpu().data.numpy()
 
-
-# 下载训练集 MNIST 手写数字训练集
+# Download MNIST
 train_dataset = datasets.MNIST(
     root='./data', train=True, transform=transforms.ToTensor(), download=True)
 
@@ -30,7 +29,7 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 
-# 定义 Convolution Network 模型
+# Defining the Convolution Network Model
 class Cnn(nn.Module):
     def __init__(self, in_dim, n_class):
         super(Cnn, self).__init__()
@@ -51,15 +50,15 @@ class Cnn(nn.Module):
         return out
 
 
-model = Cnn(1, 10)  # 图片大小是28x28
-use_gpu = torch.cuda.is_available()  # 判断是否有GPU加速
+model = Cnn(1, 10)  # Image is 28x28
+use_gpu = torch.cuda.is_available()  # GPU availability
 if use_gpu:
     model = model.cuda()
-# 定义loss和optimizer
+# Defining loss and optimizer
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=learning_rate)
 logger = Logger('./logs')
-# 开始训练
+# Start training
 for epoch in range(num_epoches):
     print('epoch {}'.format(epoch + 1))
     print('*' * 10)
@@ -72,7 +71,7 @@ for epoch in range(num_epoches):
             label = label.cuda()
         img = Variable(img)
         label = Variable(label)
-        # 向前传播
+        # Forward
         out = model(img)
         loss = criterion(out, label)
         running_loss += loss.data[0] * label.size(0)
@@ -80,7 +79,7 @@ for epoch in range(num_epoches):
         num_correct = (pred == label).sum()
         accuracy = (pred == label).float().mean()
         running_acc += num_correct.data[0]
-        # 向后传播
+        # Backward
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -131,5 +130,5 @@ for epoch in range(num_epoches):
         test_dataset)), eval_acc / (len(test_dataset))))
     print()
 
-# 保存模型
+# Save model
 torch.save(model.state_dict(), './cnn.pth')

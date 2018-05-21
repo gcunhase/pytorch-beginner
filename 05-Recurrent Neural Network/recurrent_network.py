@@ -7,12 +7,12 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision import datasets
 
-# 定义超参数
+# Defining hyperparameters
 batch_size = 100
 learning_rate = 1e-3
 num_epoches = 20
 
-# 下载训练集 MNIST 手写数字训练集
+# Download Training Set MNIST Handwriting Digital Training Set
 train_dataset = datasets.MNIST(
     root='./data', train=True, transform=transforms.ToTensor(), download=True)
 
@@ -23,7 +23,7 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 
-# 定义 Recurrent Network 模型
+# Defining the Recurrent Network Model
 class Rnn(nn.Module):
     def __init__(self, in_dim, hidden_dim, n_layer, n_class):
         super(Rnn, self).__init__()
@@ -43,15 +43,15 @@ class Rnn(nn.Module):
         return out
 
 
-model = Rnn(28, 128, 2, 10)  # 图片大小是28x28
-use_gpu = torch.cuda.is_available()  # 判断是否有GPU加速
+model = Rnn(28, 128, 2, 10)  # Image size is 28x28
+use_gpu = torch.cuda.is_available()  # Determine if there is GPU acceleration
 if use_gpu:
     model = model.cuda()
-# 定义loss和optimizer
+# Defining loss and optimizer
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-# 开始训练
+# Start training
 for epoch in range(num_epoches):
     print('epoch {}'.format(epoch + 1))
     print('*' * 10)
@@ -71,14 +71,14 @@ for epoch in range(num_epoches):
         else:
             img = Variable(img)
             label = Variable(label)
-        # 向前传播
+        # Forward
         out = model(img)
         loss = criterion(out, label)
         running_loss += loss.data[0] * label.size(0)
         _, pred = torch.max(out, 1)
         num_correct = (pred == label).sum()
         running_acc += num_correct.data[0]
-        # 向后传播
+        # Backward propagation
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -117,5 +117,5 @@ for epoch in range(num_epoches):
         test_dataset)), eval_acc / (len(test_dataset))))
     print()
 
-# 保存模型
+# Save the model
 torch.save(model.state_dict(), './rnn.pth')

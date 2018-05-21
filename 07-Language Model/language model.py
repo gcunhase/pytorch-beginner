@@ -70,7 +70,7 @@ for epoch in range(5):
             label = Variable(label).cuda()
             label = label.view(label.size(0)*label.size(1), 1)
         else:
-            input_x = Variabel(input_x)
+            input_x = Variable(input_x)
             label = Variable(label)
             label = label.view(label.size(0)*label.size(1), 1)
         # forward

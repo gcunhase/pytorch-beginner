@@ -32,11 +32,11 @@ class LinearRegression(nn.Module):
 
 
 model = LinearRegression()
-# 定义loss和优化函数
+# Defining loss and optimization functions
 criterion = nn.MSELoss()
 optimizer = optim.SGD(model.parameters(), lr=1e-4)
 
-# 开始训练
+# Start training
 num_epochs = 1000
 for epoch in range(num_epochs):
     inputs = Variable(x_train)
@@ -59,9 +59,9 @@ predict = model(Variable(x_train))
 predict = predict.data.numpy()
 plt.plot(x_train.numpy(), y_train.numpy(), 'ro', label='Original data')
 plt.plot(x_train.numpy(), predict, label='Fitting Line')
-# 显示图例
+# Display legend
 plt.legend() 
 plt.show()
 
-# 保存模型
+# Save the model
 torch.save(model.state_dict(), './linear.pth')
